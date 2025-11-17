@@ -3,5 +3,6 @@
         "*.embeddedhtml": "html",
         "*.css": "tailwindcss",
         "stdc++.h": "c"
-    }
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

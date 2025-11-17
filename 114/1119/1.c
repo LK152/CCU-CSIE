@@ -1,29 +1,43 @@
 #include "stdio.h"
 
-int step(int n) {
-    if (n == -2) return 1;
-    if (n == -1) return 0;
-}
+void step(int n, int rmd[100], int cnt[100]) {
+    if (n == -2) {
+        printf("%d", 1);
+        return;
+    }
+    if (n == -1) {
+        printf("%d", 0);
+        return;
+    }
 
-void rec(int remain) {
+    for (int i = 0; i < cnt[n]; i++) {
+        step(n - 1, rmd, cnt);
+    }
 
+    if (rmd[n])
+        step(n - 2, rmd, cnt);
 }
 
 int main() {
-    int b, s, stp = 0;
+    int b, s, stp = 1, rmder[100], cnt[100];
     scanf("%d %d", &b, &s);
-    int rst = s-b;
-    while (rst%b > 1) {
-        int cnt = rst/b;
-        int remainder = b;
-        b = rst%b;
-        rst = remainder;
+    int rst = s - b;
+    rmder[0] = b;
+    cnt[0] = rst / b;
+    s = rst;
+    rst = b;
+    while (1) {
+        rmder[stp] = s % rst;
+        cnt[stp] = rmder[stp] ? rst / rmder[stp] : rmder[stp - 1];
+        s = rst;
+        rst = rmder[stp];
 
-        printf("%d %d", remainder, cnt);
+        if (!rmder[stp])
+            break;
         stp++;
     }
 
-
+    step(stp, rmder, cnt);
 
     return 0;
 }
