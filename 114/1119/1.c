@@ -1,12 +1,12 @@
 #include "stdio.h"
 
-void step(int n, int rmd[100], int cnt[100]) {
+void step(int n, int* rmd, int* cnt) {
     if (n == -2) {
-        printf("%d", 1);
+        printf("1");
         return;
     }
     if (n == -1) {
-        printf("%d", 0);
+        printf("0");
         return;
     }
 
@@ -19,15 +19,12 @@ void step(int n, int rmd[100], int cnt[100]) {
 }
 
 int main() {
-    int b, s, stp = 1, rmder[100], cnt[100];
+    int b, s, stp = 0, rmder[100], cnt[100];
     scanf("%d %d", &b, &s);
     int rst = s - b;
-    rmder[0] = b;
-    cnt[0] = rst / b;
-    s = rst;
-    rst = b;
+
     while (1) {
-        rmder[stp] = s % rst;
+        rmder[stp] = stp ? s % rst : b;
         cnt[stp] = rmder[stp] ? rst / rmder[stp] : rmder[stp - 1];
         s = rst;
         rst = rmder[stp];
