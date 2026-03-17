@@ -5,9 +5,8 @@ int main() {
 
     scanf("%d %d %d", &a, &b, &N);
     grt = a;
-    N--;
 
-    while (N--) {
+    while (--N) {
         actc = act;
         act += gro;
         gro = grt;
