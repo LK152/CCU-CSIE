@@ -1,0 +1,11 @@
++1001 // Read num store mem 01
++0
++0
++2001 // Load mem 01
++4108 // Check mem 01 neg then mem 08
++3002 // Add mem 02
++2102 // Store mem 02
++4000 // Branch back mem 00
++1102 // Print mem 02
++4300 // Halt
+-99999
