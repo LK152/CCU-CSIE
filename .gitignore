@@ -25,3 +25,6 @@
 !*.tsx
 !*.jsx
 !*.json
+!*.g4
+!*Makefile
+!*README

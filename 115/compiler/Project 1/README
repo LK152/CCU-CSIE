@@ -1,0 +1,39 @@
+Project 1 - Lexical Analyzer
+
+========================================
+REQUIREMENTS
+========================================
+Place ANTLR4.13.2 jar in project root.
+
+========================================
+HOW TO COMPILE AND RUN
+========================================
+
+Step 1: Generate lexer src from grammar
+make generate
+
+Step 2: Run a test file
+make run FILE=test_programs/test1.c
+
+Run all test programs at once:
+make run-all
+
+========================================
+PROJECT FEATURES
+========================================
+
+1. Compound operators are matched before single-character operators
+   LE ('<='), GE ('>='), EQ ('=='), NE ('!=') are defined before
+   LT ('<'), GT ('>'), and ASSIGN ('=') in grammar.
+   This assures that ANTLR doesn't accidentally tokenize '<=' as '<' and '='.
+
+2. Keywords are defined before ID
+   All 7 keywords (int, void, float, while, else, if, return) are defined
+   before the ID rule. ANTLR matches rules in order, so keywords like
+   'while' are never accidentally tokenized as identifiers.
+
+3. Float literals follow spec
+   FLOAT_NUM requires a decimal point and supports three forms:
+   digits . digits 3.14
+   digits . 1.
+   . digits .1
