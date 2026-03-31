@@ -1,0 +1,14 @@
+Lab 3
+
+========================================
+HOW TO COMPILE AND RUN
+========================================
+
+Step 1: Generate required files
+./genFile.sh
+
+Step 2: Make all executables
+make all
+
+Step 3: Run all tests
+./test.sh
