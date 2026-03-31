@@ -1,10 +1,20 @@
-TARGET=shell
+CC = gcc
+CFLAGS = -Wall
+TARGETS = buffsize100 buffsize4096 buffsize8192 buffsize16384
 
-$(TARGET): fig3_5.o error.o
-	$(CC) -o $@ $^ 
+all: $(TARGETS)
 
-fig13_5.o: fig3_5.c
-error.o: error.c
+buffsize100: fig3_5.c error.c
+	$(CC) $(CFLAGS) -DBUFFSIZE=100 fig3_5.c error.c -o buffsize100
+
+buffsize4096: fig3_5.c error.c
+	$(CC) $(CFLAGS) -DBUFFSIZE=4096 fig3_5.c error.c -o buffsize4096
+
+buffsize8192: fig3_5.c error.c
+	$(CC) $(CFLAGS) -DBUFFSIZE=8192 fig3_5.c error.c -o buffsize8192
+
+buffsize16384: fig3_5.c error.c
+	$(CC) $(CFLAGS) -DBUFFSIZE=16384 fig3_5.c error.c -o buffsize16384
 
 clean:
-	rm -f fig3_5.o error.o $(TARGET)
+	rm -f $(TARGETS) *.o
