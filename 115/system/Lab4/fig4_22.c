@@ -9,7 +9,8 @@ typedef int Myfunc(const char*, const struct stat*, int);
 static Myfunc myfunc;
 static int myftw(char*, Myfunc*);
 static int dopath(Myfunc*);
-static long nreg, ndir, nblk, nchr, nfifo, nslink, nsock, ntot;
+static long nreg, ndir, nblk, nchr, nfifo, nslink, nsock, ntot, valid_links = 0, invalid_links = 0;
+static off_t total_size = 0;
 
 int main(int argc, char* argv[]) {
     int ret;
@@ -84,8 +85,13 @@ static int dopath(Myfunc* func) /* we return whatever func() returns */
     ptr = fullpath + strlen(fullpath); /* point to end of fullpath */
     *ptr++ = '/';
     *ptr = 0;
-    if ((dp = opendir(fullpath)) == NULL) /* can't read directory */
-        return (func(fullpath, &statbuf, FTW_DNR));
+    if ((dp = opendir(fullpath)) == NULL) /* can't read directory */ {
+        chmod(fullpath, S_IRUSR | S_IWUSR | S_IXUSR);
+        dp = opendir(fullpath);
+
+        if (dp == NULL)
+            return (func(fullpath, &statbuf, FTW_DNR));
+    }
     while ((dirp = readdir(dp)) != NULL) {
         if (strcmp(dirp->d_name, ".") == 0 || strcmp(dirp->d_name, "..") == 0)
             continue;                  /* ignore dot and dot-dot */
@@ -100,6 +106,10 @@ static int dopath(Myfunc* func) /* we return whatever func() returns */
 }
 
 static int myfunc(const char* pathname, const struct stat* statptr, int type) {
+    if (type == FTW_F || type == FTW_D || type == FTW_DNR) {
+        total_size += statptr->st_size;
+    }
+
     switch (type) {
         case FTW_F:
             switch (statptr->st_mode & S_IFMT) {

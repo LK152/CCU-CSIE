@@ -24,7 +24,8 @@ then
 	dirname=$(cat $dirfile)
 else
 	mkdir -p /tmp/$USER
-	dirname=/tmp/$USER/$(basename $(tempfile))
+	# dirname=/tmp/$USER/$(basename $(tempfile))
+    dirname=/tmp/$USER/$(basename $(mktemp))
 	echo $dirname > $dirfile
 fi
 rm -rf $dirname
