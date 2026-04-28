@@ -2,7 +2,6 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
 public class testParser {
-
     public static void main(String[] args) throws Exception {
         if (args.length < 1) {
             System.err.println("Usage: java testParser <source_file>");
@@ -15,19 +14,15 @@ public class testParser {
         System.out.println("===========================================");
 
         CharStream input = CharStreams.fromFileName(sourceFile);
-
         myparserLexer lexer = new myparserLexer(input);
-        lexer.removeErrorListeners(); // remove default console listener
+        lexer.removeErrorListeners();
         SyntaxErrorListener lexerErrorListener = new SyntaxErrorListener();
         lexer.addErrorListener(lexerErrorListener);
-
         CommonTokenStream tokens = new CommonTokenStream(lexer);
-
         myparserParser parser = new myparserParser(tokens);
         parser.removeErrorListeners();
         SyntaxErrorListener parserErrorListener = new SyntaxErrorListener();
         parser.addErrorListener(parserErrorListener);
-
         ParseTree tree = parser.program();
 
         System.out.println("===========================================");
@@ -45,13 +40,11 @@ public class testParser {
             System.out.println(" RESULT : Parse FAILED");
         }
         System.out.println("===========================================");
-
         System.out.println("\nParse Tree:");
         System.out.println(tree.toStringTree(parser));
     }
 
     static class SyntaxErrorListener extends BaseErrorListener {
-
         private int errorCount = 0;
 
         @Override

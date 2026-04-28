@@ -5,269 +5,294 @@ grammar myparser;
 }
 
 program
-    : (functionDef | declaration)* EOF
-    { if (TRACEON) System.out.println("program: (functionDef | declaration)* EOF"); }
+    : declarationList EOF
+    { if (TRACEON) System.out.println("program: declarationList EOF"); }
     ;
 
-functionDef
-    : returnType ID '(' paramList ')' block
-    { if (TRACEON) System.out.println("functionDef: returnType ID ( paramList ) block"); }
-    | VOID ID '(' paramList ')' block
-    { if (TRACEON) System.out.println("functionDef: VOID ID ( paramList ) block"); }
-    ;
-
-returnType
-    : type
-    { if (TRACEON) System.out.println("returnType: type"); }
-    ;
-
-paramList
-    : param (',' param)*
-    { if (TRACEON) System.out.println("paramList: param (, param)*"); }
-    | /* empty */
-    { if (TRACEON) System.out.println("paramList: (empty)"); }
-    ;
-
-param
-    : type ID
-    { if (TRACEON) System.out.println("param: type ID"); }
-    | type ID '[' ']'
-    { if (TRACEON) System.out.println("param: type ID [ ]"); }
-    ;
-
-type
-    : INT
-    { if (TRACEON) System.out.println("type: INT"); }
-    | FLOAT
-    { if (TRACEON) System.out.println("type: FLOAT"); }
-    | CHAR
-    { if (TRACEON) System.out.println("type: CHAR"); }
-    | DOUBLE
-    { if (TRACEON) System.out.println("type: DOUBLE"); }
-    | BOOL
-    { if (TRACEON) System.out.println("type: BOOL"); }
-    ;
-
-block
-    : '{' declarations stmts '}'
-    { if (TRACEON) System.out.println("block: { declarations stmts }"); }
-    ;
-
-declarations
-    : declaration declarations
-    { if (TRACEON) System.out.println("declarations: declaration declarations"); }
-    | /* empty */
-    { if (TRACEON) System.out.println("declarations: (empty)"); }
+declarationList
+    : declarationList declaration
+    { if (TRACEON) System.out.println("declarationList: declarationList declaration"); }
+    | declaration
+    { if (TRACEON) System.out.println("declarationList: declaration"); }
     ;
 
 declaration
-    : type ID ';'
-    { if (TRACEON) System.out.println("declaration: type ID ;"); }
-    | type ID '[' INTLIT ']' ';'
-    { if (TRACEON) System.out.println("declaration: type ID [ INTLIT ] ;"); }
-    | type ID '=' expr ';'
-    { if (TRACEON) System.out.println("declaration: type ID = expr ;"); }
+    : varDeclaration
+    { if (TRACEON) System.out.println("declaration: varDeclaration"); }
+    | funDeclaration
+    { if (TRACEON) System.out.println("declaration: funDeclaration"); }
     ;
 
-stmts
-    : stmt stmts
-    { if (TRACEON) System.out.println("stmts: stmt stmts"); }
+varDeclaration
+    : typeSpecifier ID SEMI
+    { if (TRACEON) System.out.println("varDeclaration: typeSpecifier ID ;"); }
+    | typeSpecifier ID LBRACKET INT_NUM RBRACKET SEMI
+    { if (TRACEON) System.out.println("varDeclaration: typeSpecifier ID [ Integer ] ;"); }
+    ;
+
+typeSpecifier
+    : INT_TYPE
+    { if (TRACEON) System.out.println("typeSpecifier: int"); }
+    | VOID_TYPE
+    { if (TRACEON) System.out.println("typeSpecifier: void"); }
+    | FLOAT_TYPE
+    { if (TRACEON) System.out.println("typeSpecifier: float"); }
+    ;
+
+funDeclaration
+    : typeSpecifier ID LPAREN params RPAREN compoundStmt
+    { if (TRACEON) System.out.println("funDeclaration: typeSpecifier ID ( params ) compoundStmt"); }
+    ;
+
+params
+    : paramList
+    { if (TRACEON) System.out.println("params: paramList"); }
+    | VOID_TYPE
+    { if (TRACEON) System.out.println("params: void"); }
     | /* empty */
-    { if (TRACEON) System.out.println("stmts: (empty)"); }
+    { if (TRACEON) System.out.println("params: empty"); }
     ;
 
-stmt
-    : assignStmt
-    { if (TRACEON) System.out.println("stmt: assignStmt"); }
-    | ifStmt
-    { if (TRACEON) System.out.println("stmt: ifStmt"); }
-    | whileStmt
-    { if (TRACEON) System.out.println("stmt: whileStmt"); }
-    | forStmt
-    { if (TRACEON) System.out.println("stmt: forStmt"); }
+paramList
+    : paramList COMMA param
+    { if (TRACEON) System.out.println("paramList: paramList , param"); }
+    | param
+    { if (TRACEON) System.out.println("paramList: param"); }
+    ;
+
+param
+    : typeSpecifier ID
+    { if (TRACEON) System.out.println("param: typeSpecifier ID"); }
+    | typeSpecifier ID LBRACKET RBRACKET
+    { if (TRACEON) System.out.println("param: typeSpecifier ID [ ]"); }
+    ;
+
+compoundStmt
+    : LBRACE localDeclarations statementList RBRACE
+    { if (TRACEON) System.out.println("compoundStmt: { localDeclarations statementList }"); }
+    ;
+
+localDeclarations
+    : localDeclarations varDeclaration
+    { if (TRACEON) System.out.println("localDeclarations: localDeclarations varDeclaration"); }
+    | /* empty */
+    { if (TRACEON) System.out.println("localDeclarations: empty"); }
+    ;
+
+statementList
+    : statementList statement
+    { if (TRACEON) System.out.println("statementList: statementList statement"); }
+    | /* empty */
+    { if (TRACEON) System.out.println("statementList: empty"); }
+    ;
+
+statement
+    : expressionStmt
+    { if (TRACEON) System.out.println("statement: expressionStmt"); }
+    | compoundStmt
+    { if (TRACEON) System.out.println("statement: compoundStmt"); }
+    | selectionStmt
+    { if (TRACEON) System.out.println("statement: selectionStmt"); }
+    | iterationStmt
+    { if (TRACEON) System.out.println("statement: iterationStmt"); }
     | returnStmt
-    { if (TRACEON) System.out.println("stmt: returnStmt"); }
-    | funcCallStmt
-    { if (TRACEON) System.out.println("stmt: funcCallStmt"); }
-    | block
-    { if (TRACEON) System.out.println("stmt: block"); }
-    | printfStmt
-    { if (TRACEON) System.out.println("stmt: printfStmt"); }
-    | scanfStmt
-    { if (TRACEON) System.out.println("stmt: scanfStmt"); }
+    { if (TRACEON) System.out.println("statement: returnStmt"); }
     ;
 
-assignStmt
-    : ID '=' expr ';'
-    { if (TRACEON) System.out.println("assignStmt: ID = expr ;"); }
-    | ID '[' expr ']' '=' expr ';'
-    { if (TRACEON) System.out.println("assignStmt: ID [ expr ] = expr ;"); }
+expressionStmt
+    : expression SEMI
+    { if (TRACEON) System.out.println("expressionStmt: expression ;"); }
+    | SEMI
+    { if (TRACEON) System.out.println("expressionStmt: ;"); }
     ;
 
-ifStmt
-    : IF '(' expr ')' stmt
-    { if (TRACEON) System.out.println("ifStmt: IF ( expr ) stmt"); }
-    | IF '(' expr ')' stmt ELSE stmt
-    { if (TRACEON) System.out.println("ifStmt: IF ( expr ) stmt ELSE stmt"); }
+selectionStmt
+    : IF_ LPAREN expression RPAREN statement ELSE_ statement
+    { if (TRACEON) System.out.println("selectionStmt: if ( expression ) statement else statement"); }
+    | IF_ LPAREN expression RPAREN statement
+    { if (TRACEON) System.out.println("selectionStmt: if ( expression ) statement"); }
     ;
 
-whileStmt
-    : WHILE '(' expr ')' stmt
-    { if (TRACEON) System.out.println("whileStmt: WHILE ( expr ) stmt"); }
-    ;
-
-forStmt
-    : FOR '(' forInit expr ';' forUpdate ')' stmt
-    { if (TRACEON) System.out.println("forStmt: FOR ( forInit expr ; forUpdate ) stmt"); }
-    ;
-
-forInit
-    : type ID '=' expr ';'
-    { if (TRACEON) System.out.println("forInit: type ID = expr ;"); }
-    | ID '=' expr ';'
-    { if (TRACEON) System.out.println("forInit: ID = expr ;"); }
-    | ';'
-    { if (TRACEON) System.out.println("forInit: ;"); }
-    ;
-
-forUpdate
-    : ID '=' expr
-    { if (TRACEON) System.out.println("forUpdate: ID = expr"); }
-    | ID '++'
-    { if (TRACEON) System.out.println("forUpdate: ID ++"); }
-    | ID '--'
-    { if (TRACEON) System.out.println("forUpdate: ID --"); }
-    | /* empty */
-    { if (TRACEON) System.out.println("forUpdate: (empty)"); }
+iterationStmt
+    : WHILE_ LPAREN expression RPAREN statement
+    { if (TRACEON) System.out.println("iterationStmt: while ( expression ) statement"); }
     ;
 
 returnStmt
-    : RETURN expr ';'
-    { if (TRACEON) System.out.println("returnStmt: RETURN expr ;"); }
-    | RETURN ';'
-    { if (TRACEON) System.out.println("returnStmt: RETURN ;"); }
+    : RETURN_ SEMI
+    { if (TRACEON) System.out.println("returnStmt: return ;"); }
+    | RETURN_ expression SEMI
+    { if (TRACEON) System.out.println("returnStmt: return expression ;"); }
     ;
 
-funcCallStmt
-    : ID '(' argList ')' ';'
-    { if (TRACEON) System.out.println("funcCallStmt: ID ( argList ) ;"); }
+expression
+    : var ASSIGN expression
+    { if (TRACEON) System.out.println("expression: var = expression"); }
+    | simpleExpression
+    { if (TRACEON) System.out.println("expression: simpleExpression"); }
+    ;
+
+var
+    : ID LBRACKET expression RBRACKET
+    { if (TRACEON) System.out.println("var: ID [ expression ]"); }
+    | ID
+    { if (TRACEON) System.out.println("var: ID"); }
+    ;
+
+simpleExpression
+    : additiveExpression relop additiveExpression
+    { if (TRACEON) System.out.println("simpleExpression: additiveExpression relop additiveExpression"); }
+    | additiveExpression
+    { if (TRACEON) System.out.println("simpleExpression: additiveExpression"); }
+    ;
+
+relop
+    : LE
+    { if (TRACEON) System.out.println("relop: <="); }
+    | LT
+    { if (TRACEON) System.out.println("relop: <"); }
+    | GT
+    { if (TRACEON) System.out.println("relop: >"); }
+    | GE
+    { if (TRACEON) System.out.println("relop: >="); }
+    | EQ
+    { if (TRACEON) System.out.println("relop: =="); }
+    | NE
+    { if (TRACEON) System.out.println("relop: !="); }
+    ;
+
+additiveExpression
+    : additiveExpression addop term
+    { if (TRACEON) System.out.println("additiveExpression: additiveExpression addop term"); }
+    | term
+    { if (TRACEON) System.out.println("additiveExpression: term"); }
+    ;
+
+addop
+    : PLUS
+    { if (TRACEON) System.out.println("addop: +"); }
+    | MINUS
+    { if (TRACEON) System.out.println("addop: -"); }
+    ;
+
+term
+    : term mulop factor
+    { if (TRACEON) System.out.println("term: term mulop factor"); }
+    | factor
+    { if (TRACEON) System.out.println("term: factor"); }
+    ;
+
+mulop
+    : STAR
+    { if (TRACEON) System.out.println("mulop: *"); }
+    | SLASH
+    { if (TRACEON) System.out.println("mulop: /"); }
+    | MOD
+    { if (TRACEON) System.out.println("mulop: %"); }
+    ;
+
+factor
+    : LPAREN expression RPAREN
+    { if (TRACEON) System.out.println("factor: ( expression )"); }
+    | call
+    { if (TRACEON) System.out.println("factor: call"); }
+    | var
+    { if (TRACEON) System.out.println("factor: var"); }
+    | INT_NUM
+    { if (TRACEON) System.out.println("factor: Integer"); }
+    | FLOAT_NUM
+    { if (TRACEON) System.out.println("factor: Float"); }
+    ;
+
+call
+    : ID LPAREN args RPAREN
+    { if (TRACEON) System.out.println("call: ID ( args )"); }
+    ;
+
+args
+    : argList
+    { if (TRACEON) System.out.println("args: argList"); }
+    | /* empty */
+    { if (TRACEON) System.out.println("args: empty"); }
     ;
 
 argList
-    : expr (',' expr)*
-    { if (TRACEON) System.out.println("argList: expr (, expr)*"); }
-    | /* empty */
-    { if (TRACEON) System.out.println("argList: (empty)"); }
+    : argList COMMA expression
+    { if (TRACEON) System.out.println("argList: argList , expression"); }
+    | expression
+    { if (TRACEON) System.out.println("argList: expression"); }
     ;
 
-printfStmt
-    : PRINTF '(' STRLIT (',' expr)* ')' ';'
-    { if (TRACEON) System.out.println("printfStmt: PRINTF ( STRLIT (, expr)* ) ;"); }
+/*----------------------*/
+/*   Reserved Keywords  */
+/*----------------------*/
+INT_TYPE   : 'int'    ;
+VOID_TYPE  : 'void'   ;
+FLOAT_TYPE : 'float'  ;
+WHILE_     : 'while'  ;
+ELSE_      : 'else'   ;
+IF_        : 'if'     ;
+RETURN_    : 'return' ;
+
+/*----------------------*/
+/*  Compound Operators  */
+/*----------------------*/
+LE  : '<=' ;
+GE  : '>=' ;
+EQ  : '==' ;
+NE  : '!=' ;
+
+/*----------------------*/
+/*   Single-char Ops    */
+/*----------------------*/
+PLUS   : '+' ;
+MINUS  : '-' ;
+STAR   : '*' ;
+SLASH  : '/' ;
+MOD    : '%' ;
+LT     : '<' ;
+GT     : '>' ;
+ASSIGN : '=' ;
+
+/*----------------------*/
+/*     Punctuation      */
+/*----------------------*/
+SEMI     : ';' ;
+COMMA    : ',' ;
+LPAREN   : '(' ;
+RPAREN   : ')' ;
+LBRACKET : '[' ;
+RBRACKET : ']' ;
+LBRACE   : '{' ;
+RBRACE   : '}' ;
+
+/*----------------------*/
+/*      Literals        */
+/*----------------------*/
+FLOAT_NUM
+    : DIGIT+ '.' DIGIT*
+    | '.' DIGIT+
+    ;
+INT_NUM
+    : '0'
+    | [1-9] DIGIT*
     ;
 
-scanfStmt
-    : SCANF '(' STRLIT (',' '&' ID)+ ')' ';'
-    { if (TRACEON) System.out.println("scanfStmt: SCANF ( STRLIT (, & ID)+ ) ;"); }
-    ;
+/*----------------------*/
+/*     Identifiers      */
+/*----------------------*/
+ID : LETTER (LETTER | DIGIT)* ;
 
-expr
-    : expr OR andExpr
-    { if (TRACEON) System.out.println("expr: expr OR andExpr"); }
-    | andExpr
-    { if (TRACEON) System.out.println("expr: andExpr"); }
-    ;
+/*----------------------*/
+/*  Comments/Whitespace */
+/*----------------------*/
+LINE_COMMENT  : '//' ~[\r\n]* -> skip ;
+BLOCK_COMMENT : '/*' .*? '*/' -> skip ;
+WS            : (' ' | '\r' | '\t')+ -> skip ;
+NEW_LINE      : '\n' -> skip ;
 
-andExpr
-    : andExpr AND eqExpr
-    { if (TRACEON) System.out.println("andExpr: andExpr AND eqExpr"); }
-    | eqExpr
-    { if (TRACEON) System.out.println("andExpr: eqExpr"); }
-    ;
-
-eqExpr
-    : eqExpr ('==' | '!=') relExpr
-    { if (TRACEON) System.out.println("eqExpr: eqExpr (== | !=) relExpr"); }
-    | relExpr
-    { if (TRACEON) System.out.println("eqExpr: relExpr"); }
-    ;
-
-relExpr
-    : relExpr ('<' | '>' | '<=' | '>=') addExpr
-    { if (TRACEON) System.out.println("relExpr: relExpr (< | > | <= | >=) addExpr"); }
-    | addExpr
-    { if (TRACEON) System.out.println("relExpr: addExpr"); }
-    ;
-
-addExpr
-    : addExpr ('+' | '-') mulExpr
-    { if (TRACEON) System.out.println("addExpr: addExpr (+ | -) mulExpr"); }
-    | mulExpr
-    { if (TRACEON) System.out.println("addExpr: mulExpr"); }
-    ;
-
-mulExpr
-    : mulExpr ('*' | '/' | '%') unaryExpr
-    { if (TRACEON) System.out.println("mulExpr: mulExpr (* | / | %) unaryExpr"); }
-    | unaryExpr
-    { if (TRACEON) System.out.println("mulExpr: unaryExpr"); }
-    ;
-
-unaryExpr
-    : '-' primaryExpr
-    { if (TRACEON) System.out.println("unaryExpr: - primaryExpr"); }
-    | '!' primaryExpr
-    { if (TRACEON) System.out.println("unaryExpr: ! primaryExpr"); }
-    | primaryExpr
-    { if (TRACEON) System.out.println("unaryExpr: primaryExpr"); }
-    ;
-
-primaryExpr
-    : INTLIT
-    { if (TRACEON) System.out.println("primaryExpr: INTLIT"); }
-    | FLOATLIT
-    { if (TRACEON) System.out.println("primaryExpr: FLOATLIT"); }
-    | CHARLIT
-    { if (TRACEON) System.out.println("primaryExpr: CHARLIT"); }
-    | TRUE
-    { if (TRACEON) System.out.println("primaryExpr: TRUE"); }
-    | FALSE
-    { if (TRACEON) System.out.println("primaryExpr: FALSE"); }
-    | ID '[' expr ']'
-    { if (TRACEON) System.out.println("primaryExpr: ID [ expr ]"); }
-    | ID '(' argList ')'
-    { if (TRACEON) System.out.println("primaryExpr: ID ( argList )"); }
-    | ID
-    { if (TRACEON) System.out.println("primaryExpr: ID"); }
-    | '(' expr ')'
-    { if (TRACEON) System.out.println("primaryExpr: ( expr )"); }
-    ;
-
-INT     : 'int' ;
-FLOAT   : 'float' ;
-CHAR    : 'char' ;
-DOUBLE  : 'double' ;
-BOOL    : 'bool' ;
-VOID    : 'void' ;
-IF      : 'if' ;
-ELSE    : 'else' ;
-WHILE   : 'while' ;
-FOR     : 'for' ;
-RETURN  : 'return' ;
-TRUE    : 'true' ;
-FALSE   : 'false' ;
-PRINTF  : 'printf' ;
-SCANF   : 'scanf' ;
-
-OR      : '||' ;
-AND     : '&&' ;
-
-INTLIT   : [0-9]+ ;
-FLOATLIT : [0-9]+ '.' [0-9]* | '.' [0-9]+ ;
-CHARLIT  : '\'' (~['\\\r\n] | '\\' .) '\'' ;
-STRLIT   : '"' (~["\\\r\n] | '\\' .)* '"' ;
-
-ID : [a-zA-Z_][a-zA-Z_0-9]* ;
-
-WS          : [ \t\r\n]+         -> skip ;
-LINE_COMMENT : '//' ~[\r\n]*     -> skip ;
-BLOCK_COMMENT: '/*' .*? '*/'     -> skip ;
+/*----------------------*/
+/*      Fragments       */
+/*----------------------*/
+fragment LETTER : 'a'..'z' | 'A'..'Z' | '_' ;
+fragment DIGIT  : '0'..'9' ;
