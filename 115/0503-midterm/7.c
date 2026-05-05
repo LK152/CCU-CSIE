@@ -19,16 +19,8 @@ int main() {
         return 0;
     }
 
-    if (b == y) {
-        kx = (a-x)/vx;
-        ky = kx;
-    } else if (a == x) {
-        ky = (b-y)/vy;
-        kx = ky;
-    } else {
-        kx = (a-x)/vx;
-        ky = (b-y)/vy;
-    }
+    kx = (a == x) ? (b-y)/vy : (a-x)/vx;
+    ky = (b == y) ? (a-x)/vx : (b-y)/vy;
 
     if (kx != ky || kx < 0 || ky < 0) printf("Single Forever");
     else printf("Love Forever");
