@@ -1,0 +1,130 @@
+# Typing Tutor
+
+## How to compile and run
+
+```bash
+make
+```
+
+This automatically compiles all `.java` files and launches the application.
+
+### Other make targets
+
+```bash
+make compile # Compile only
+make run # Run without compiling
+make clean # Remove all compiled .class files
+```
+
+## How to use
+
+1. A pangram prompt is displayed at the top in blue.
+2. Click inside the **Your Input** text area and start typing.
+3. Each key you press is highlighted on the virtual keyboard.
+4. Your accuracy is updated in real time after every keystroke.
+5. The **Difficulty Report** panel shows keys you have missed, sorted by miss count.
+6. Press `TAB + ENTER` or click **Restart** to get a new prompt and reset all stats.
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|---|---|
+| `TAB + ENTER` | Restart with a new prompt |
+
+### Class Overview
+
+| Class | File | Responsibility |
+|---|---|---|
+| `TypingTutor` | `TypingTutor.java` | Main window, UI layout, game state management |
+| `VirtualKB` | `VirtualKB.java` | Virtual keyboard rendering and key highlighting |
+| `TypingKeyListener` | `TypingKeyListener.java` | Keyboard event handling and input validation |
+
+---
+
+### `TypingTutor` (extends `JFrame`)
+
+The entry point and central controller of the application. Builds the UI, manages game state, and coordinates between the virtual keyboard and key listener.
+
+#### Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `PANGRAMS` | `String[]` | Static list of pangrams used as typing prompts |
+| `TARGET` | `String` | The currently active prompt the user must type |
+| `inputTextArea` | `JTextArea` | Editable area where the user types |
+| `reportTextArea` | `JTextArea` | Read-only panel showing the difficulty report |
+| `promptLabel` | `JLabel` | Displays the current target prompt in blue |
+| `statsLabel` | `JLabel` | Displays live accuracy, correct count, and total count |
+| `resetButton` | `JButton` | Clicking this calls `restart()` |
+| `virtualKB` | `VirtualKB` | The on-screen keyboard component |
+| `keyListener` | `TypingKeyListener` | The keyboard event listener attached to `inputTextArea` |
+| `missedKeysMap` | `Map<Character, Integer>` | Tracks how many times each key was missed |
+| `isShifted` | `boolean` | Whether Shift is currently held |
+| `isCaps` | `boolean` | Whether Caps Lock is currently active |
+| `correctKeys` | `int` | Number of correctly typed keystrokes so far |
+| `totalKeys` | `int` | Total number of keystrokes attempted so far |
+
+#### Methods
+
+| Method | Description |
+|---|---|
+| `TypingTutor()` | Constructor. Builds the full UI layout, initializes all components, attaches the key listener, and detects the initial Caps Lock state. |
+| `checkAcc(char typedChar)` | Called on every keystroke. Compares the typed character against the expected character in `TARGET` at the current cursor position. Increments `correctKeys` if correct, otherwise records the miss in `missedKeysMap` and calls `updateDiffReport()`. Updates `statsLabel` with the latest accuracy. |
+| `setShiftState(boolean shiftActive)` | Updates `isShifted` and tells `VirtualKB` to re-render key labels accordingly. |
+| `toggleCapsState()` | Flips `isCaps` and tells `VirtualKB` to re-render key labels. |
+| `restart()` | Resets all state: clears pressed keys, re-detects Caps Lock, picks a new prompt via `selectRandom()`, clears the input area, resets counters, and returns focus to the input area. |
+| `updateDiffReport()` | Rebuilds the text in `reportTextArea` from `missedKeysMap`, sorted by miss count descending. Shows a default message if no errors have occurred. |
+| `selectRandom()` | Picks a random pangram from `PANGRAMS`, ensuring it differs from the current `TARGET` when more than one option is available. |
+| `main(String[] args)` | Entry point. Launches `TypingTutor` on the Swing Event Dispatch Thread via `SwingUtilities.invokeLater`. |
+
+---
+
+### `VirtualKB` (extends `JPanel`)
+
+Renders a five-row QWERTY keyboard as a grid of `JButton` components. Handles key highlighting and label toggling for Shift and Caps Lock states.
+
+#### Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `keyButtonMap` | `Map<Integer, JButton>` | Maps each key code to its corresponding button on screen |
+| `shiftMap` | `Map<Integer, String[]>` | Maps each key code to a two-element array: `[defaultLabel, shiftedLabel]` |
+| `defaultButtonColor` | `Color` | Stores the original button background color for restoration after highlighting |
+
+#### Methods
+
+| Method | Description |
+|---|---|
+| `VirtualKB()` | Constructor. Sets up the panel layout and calls `buildVirtualKB()`. |
+| `buildVirtualKB()` | Defines all five keyboard rows as data arrays and calls `storeShiftData()` and `createKbRow()` for each. |
+| `storeShiftData(Object[][] rowData)` | Populates `shiftMap` with the default and shifted label for each key in a row. |
+| `createKbRow(Object[][] keyData)` | Creates a `JPanel` for one keyboard row, instantiates a `JButton` for each key, stores it in `keyButtonMap`, and returns the panel. |
+| `highlightKey(int keyCode, Color color, boolean opaque)` | Changes the background color of the button matching `keyCode` to indicate it is being pressed. |
+| `restoreKeyColor(int keyCode)` | Resets the button matching `keyCode` back to `defaultButtonColor` when the key is released. |
+| `toggleLabels(boolean shiftActive, boolean capsActive)` | Iterates all buttons and updates their labels. Letter keys follow XOR logic (`shiftActive ^ capsActive`) for correct Caps Lock and Shift interaction; symbol keys simply switch between default and shifted labels. |
+
+---
+
+### `TypingKeyListener` (implements `KeyListener`)
+
+Handles all keyboard events from the input text area. Coordinates key highlighting on the virtual keyboard, accuracy checking, Shift/Caps state changes, and the restart shortcut.
+
+#### Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `app` | `TypingTutor` | Reference to the main application for calling state-change methods |
+| `kb` | `VirtualKB` | Reference to the virtual keyboard for highlighting |
+| `highlightColor` | `Color` | The color applied to a key button when pressed |
+| `pressed` | `Set<Integer>` | Tracks all key codes currently held down, enabling multi-key detection |
+| `restarted` | `boolean` | Flag that suppresses the spurious `keyTyped` event that fires immediately after a `TAB + ENTER` restart |
+
+#### Methods
+
+| Method | Description |
+|---|---|
+| `TypingKeyListener(TypingTutor app, VirtualKB kb, Color highlightColor)` | Constructor. Stores references to the main app, virtual keyboard, and highlight color. |
+| `keyTyped(KeyEvent e)` | Fires when a printable character is generated. Consumes the event silently if `restarted` is true or if `TAB`/`ENTER` is held. Otherwise calls `app.checkAcc()` for valid non-backspace characters. |
+| `keyPressed(KeyEvent e)` | Fires when any key is pressed. Adds the key code to `pressed`, triggers `app.restart()` if both `TAB` and `ENTER` are held simultaneously, updates Shift/Caps state, and highlights the key on the virtual keyboard. |
+| `keyReleased(KeyEvent e)` | Fires when a key is released. Removes the key code from `pressed`, clears the `restarted` flag if no keys remain held, updates Shift state, and restores the key's original color on the virtual keyboard. |
+| `clearPressedKeys()` | Empties the `pressed` set. Called by `app.restart()` to prevent ghost key states after a reset. |
