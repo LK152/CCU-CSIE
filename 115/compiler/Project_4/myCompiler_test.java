@@ -1,21 +1,22 @@
-import org.antlr.runtime.*;
-import java.util.ArrayList;
-import java.util.List;
+import org.antlr.v4.runtime.*;
 
 public class myCompiler_test {
-	public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
+        if (args.length == 0) {
+            System.err.println("Usage: java myCompiler_test <input_file.c>");
+            return;
+        }
 
-      CharStream input = new ANTLRFileStream(args[0]);
-      myCompilerLexer lexer = new myCompilerLexer(input);
-      CommonTokenStream tokens = new CommonTokenStream(lexer);
- 
-      myCompilerParser parser = new myCompilerParser(tokens);
-      parser.program();
-      
-      /* Output text section */
-      List<String> text_code = parser.getTextCode();
-	  
-      for (int i=0; i < text_code.size(); i++)
-         System.out.println(text_code.get(i));
-      }
+        CharStream input = CharStreams.fromFileName(args[0]);
+        myCompilerLexer lexer = new myCompilerLexer(input);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+        myCompilerParser parser = new myCompilerParser(tokens);
+
+        // Kick off the parser
+        parser.program();
+
+        // Output the complete LLVM IR module
+        System.out.println(parser.getModule());
+    }
 }
