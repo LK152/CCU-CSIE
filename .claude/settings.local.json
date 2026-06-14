@@ -6,7 +6,12 @@
       "Bash(nm /usr/lib/libc.dylib)",
       "Bash(nm /usr/lib/libSystem.dylib)",
       "Bash(clang -S -emit-llvm /tmp/t.c -o /tmp/t.ll)",
-      "Read(//private/tmp/**)"
+      "Read(//private/tmp/**)",
+      "Bash(awk '/^\\\\t/{c++} END{print c\" recipe lines start with a tab\"}' 115/java/23.11/Makefile)",
+      "Bash(PATH_TO_FX=\"C:/Users/Luke/javafx-sdk-24.0.1/lib\" make all)",
+      "Bash(PATH_TO_FX=\"C:/Users/Luke/javafx-sdk-24.0.1/lib\" timeout 5 make run)",
+      "Bash(echo \"run exit=$? \\(124=window stayed open=success\\)\")",
+      "Bash(PATH_TO_FX=\"C:/Users/Luke/javafx-sdk-24.0.1/lib\" make clean)"
     ]
   }
 }
