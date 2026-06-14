@@ -1,4 +1,4 @@
-// Generated from /Users/lk/Documents/GitHub/CCU-CSIE/115/compiler/Project_4/myCompiler.g4 by ANTLR 4.13.1
+// Generated from c:/Users/Luke/Documents/Github/CCU-CSIE/115/compiler/Project_4/myCompiler.g4 by ANTLR 4.13.1
 
     import java.util.HashMap;
     import java.util.ArrayList;

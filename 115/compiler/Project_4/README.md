@@ -1,10 +1,4 @@
-# Project 4 — Small C Compiler for LLVM IR
-
-## Overview
-
-This is a prototype C compiler that translates a subset of C into LLVM IR. It is built with **ANTLR4** (grammar file `myCompiler.g4`) and implemented in **Java**. The generated LLVM IR can be compiled to a native executable using `clang`.
-
----
+# Project 4 — C Subset Compiler for LLVM IR
 
 ## Requirements
 
@@ -24,7 +18,7 @@ This is a prototype C compiler that translates a subset of C into LLVM IR. It is
 make build
 ```
 
-This runs ANTLR4 to generate the lexer/parser from `myCompiler.g4`, then compiles all `.java` files.
+Runs ANTLR4 to generate the lexer/parser from `myCompiler.g4`, then compiles all `.java` files.
 
 ### Step 2 — Compile a C source file to LLVM IR
 
@@ -39,168 +33,237 @@ clang <output>.ll myRuntime.c -o <program> -lm
 ./<program>
 ```
 
-### Using the Makefile shortcut
+### Makefile shortcuts
 
 ```bash
-make run TEST=test
+make run TEST=test        # build, compile test.c → test.ll, link, and run
+make gen-ll TEST=test     # compile test.c → test.ll only (no link/run)
+make run-all              # build, compile, link, and run all test files
+make gen-ll-all           # compile all test files to .ll only (no link/run)
 ```
-
-This builds, compiles `test.c` to `test.ll`, links with `myRuntime.c`, and runs the result.
 
 ---
 
 ## Supported C Subset
 
-### Basic Requirements
+### Types
 
-| Feature | Description |
-|---------|-------------|
-| **Data types** | `int`, `float`, `void` |
-| **Arithmetic** | `+`, `-`, `*`, `/`, `%` |
-| **Comparison** | `>`, `>=`, `<`, `<=`, `==`, `!=` |
-| **if / if-else** | Both with mandatory braces `{ }` |
-| **printf** | Format strings with `%d`, `%f`; any number of arguments |
-| **scanf** | Format strings with `%d`, `%f`; address arguments `&var` |
-| **`##` operator** | `a ## b` = a^b + b^a (both operands coerced to float; same precedence as `*`/`/`) |
+| Type | LLVM | Notes |
+|------|------|-------|
+| `int` | `i32` | |
+| `float` | `float` | |
+| `double` | `double` | |
+| `void` | `void` | return type only |
+| `char` | `i8` | |
+| `bool` | `i1` | `true`/`false` literals supported |
+| `long long`, `unsigned long long` | `i64` | |
+| `unsigned`, `long`, `short`, etc. | `i32` | mapped to int |
+| Pointer `T*` | `ptr` | any depth |
+| Array `T[N]`, `T[N][M]` | `[N x T]` | stack-allocated |
+| `struct`, `union` | `%struct.Name` | named fields, anonymous blocks |
+| `typedef` | — | scalar and function-pointer aliases |
 
-### Extended Features
+### Statements
 
-| Feature | Description |
-|---------|-------------|
-| **Implicit type conversion** | `int op float` promotes the int to float; assigning float to int truncates |
-| **Explicit type casting** | `(int)expr`, `(float)expr` |
-| **Unary minus** | `-expr` for both int and float |
-| **Compound assignment** | `+=`, `-=`, `*=`, `/=`, `%=` |
-| **Increment / decrement** | `++` and `--`, both prefix and postfix |
-| **While loop** | `while (cond) { ... }` |
-| **Nested while** | While loops inside while loops |
-| **While + if** | if/else inside while, while inside if |
-| **Nested if** | if/else inside another if/else |
-| **Multiple functions** | User-defined functions with any number of int/float parameters |
-| **Function call** | Value-returning calls usable in expressions; void calls as statements |
-| **Recursion** | Functions can call themselves |
-| **Type error detection** | Undeclared and redeclared identifier errors with line numbers |
+| Statement | Notes |
+|-----------|-------|
+| Assignment `=`, `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `\|=`, `^=`, `<<=`, `>>=` | scalars, array elements, struct fields, pointer-to-struct fields, `*ptr` |
+| `++` / `--` | prefix and postfix forms |
+| `if` / `if-else` | arbitrary nesting, bare body or braced |
+| `while` | `break` and `continue` supported |
+| `for` | C99 init declaration, multiple update expressions, `break` / `continue` |
+| `do`-`while` | `break` and `continue` supported |
+| `switch` / `case` / `default` | integer/char/enum case values, C fall-through, `break` |
+| `return` | coerces to declared return type |
+| `break` / `continue` | target nearest enclosing loop or switch |
+| `goto` / label | forward and backward jumps within a function |
+| Function call | value-returning (in expression) or void (as statement) |
+
+### Expressions
+
+| Feature | Notes |
+|---------|-------|
+| Arithmetic `+`, `-`, `*`, `/`, `%` | `int`, `float`, `double`; implicit promotion |
+| Bitwise `&`, `\|`, `^`, `~`, `<<`, `>>` | integer operands only |
+| Logical `&&`, `\|\|`, `!` | short-circuit emitted as `and i1` / `or i1` |
+| Comparison `>`, `>=`, `<`, `<=`, `==`, `!=` | all scalar types |
+| Ternary `? :` | result type is wider branch |
+| Comma operator `(a, b, c)` | inside parentheses only |
+| Unary `-`, `+` | negation / no-op |
+| Address-of `&id` | yields stack-slot address |
+| Dereference `*expr` | loads through pointer |
+| `##` operator | `a ## b` = a^b + b^a (float result) |
+| Type cast `(T)` | scalar casts and pointer casts |
+| `sizeof(T)` | compile-time constant |
+| `sizeof(struct S)` | sum of field sizes |
+| Array element `a[i]`, `a[i][j]` | read and write |
+| Struct member `.field`, `->field` | read and write |
+| Function-pointer call `arr[i](args)` | via pointer array element |
+| `NULL`, `true`, `false` | integer / bool literals |
+| Hex literals `0xFF` | `int` |
+| Char literals `'A'`, `'\n'` | `int` |
+| Float suffix `1.5f` | `float` literal |
+| String literal adjacent concat `"a" "b"` | produces single string global |
+
+### Top-Level Declarations
+
+| Feature | Notes |
+|---------|-------|
+| Global variables | scalar and array; zero-initialised in IR |
+| `enum` | hex values, expression values, optional implicit counter |
+| `struct` | named fields, pointer fields, bit-fields (width ignored), anonymous union/struct blocks |
+| `union` | treated as struct |
+| `typedef` | scalar alias, function-pointer alias |
+| Function prototype | for mutual recursion |
+| `#include`, `#define`, `#if`, … | silently skipped by lexer |
 
 ---
 
 ## Code Optimizations
 
-The compiler performs several optimizations during code generation (no separate optimization pass needed).
+All optimisations happen during code generation with no separate pass.
 
 ### 1. Constant Folding
 
-Arithmetic expressions whose operands are both compile-time constants are evaluated at compile time — no instruction is emitted.
+Arithmetic, bitwise, comparison, and conversion operations on compile-time constants are evaluated at compile time — no instruction is emitted.
 
 ```c
-a = 2 + 3;      // emits: store i32 5
-x = 1.5 * 2.0;  // emits: store float <hex for 3.0>
-y = 2.0 ## 3.0; // emits: store float <hex for 17.0>  (folded at compile time)
+a = 2 + 3;          // store i32 5
+x = 1.5 * 2.0;      // store double <hex for 3.0>
+y = 2.0 ## 3.0;     // store float <hex for 17.0>
+z = 0xFF & 0x0F;    // store i32 15
 ```
-
-Works for `+`, `-`, `*`, `/`, `%`, unary minus, `##`, type conversions, and comparisons.
 
 ### 2. Algebraic Identity Simplifications
 
-Trivially redundant operations are eliminated without emitting instructions:
+Trivially redundant operations are eliminated:
 
-| Expression | Simplified to |
-|------------|---------------|
+| Expression | Result |
+|------------|--------|
 | `x + 0`, `x - 0` | `x` |
 | `x * 1`, `x / 1` | `x` |
 | `x * 0` | `0` |
 
-These apply to both `int` and `float`, with correct type promotion.
-
 ### 3. Constant Propagation
 
-When a variable is assigned a constant, the compiler tracks that fact and substitutes the constant for subsequent reads of that variable — eliminating `load` instructions entirely.
+A variable assigned a constant is tracked; subsequent reads use the constant directly (no `load` emitted). The table is conservatively cleared at every control-flow merge point and at `scanf` calls.
 
 ```c
-a = 10;          // constSlot[a] = 10
-b = a + 5;       // reads 10 from constSlot → folds to 15, no load emitted
-c = b * 2;       // reads 15 from constSlot → folds to 30, no load emitted
+a = 10;       // constSlot[a] = 10
+b = a + 5;    // → b = 15, no load
+c = b * 2;    // → c = 30, no load
 ```
-
-The propagation table is conservatively invalidated at all control-flow merge points (after `if`/`else`, at loop condition labels, after `while`), and at `scanf` calls that write through `&var` pointers.
 
 ### 4. Constant Type Conversion
 
-Coercions between `int` and `float` constants are resolved at compile time without emitting `sitofp` or `fptosi` instructions.
+Coercions between `int`, `float`, and `double` constants are resolved at compile time:
 
 ```c
-float x = 5;      // emits: store float 0x4014000000000000 (no sitofp)
-int   n = 2.9;    // emits: store i32 2  (no fptosi)
+float x = 5;    // store float 0x4014000000000000  (no sitofp instruction)
+int   n = 2.9;  // store i32 2  (no fptosi instruction)
 ```
 
 ---
 
 ## Test Programs
 
-### test.c — Comprehensive stress test
+### `test.c` — Comprehensive stress test
 
-Exercises all basic and extended features together:
-- Multiple user-defined functions (`computeGCD`, `printGreeting`)
-- `scanf`/`printf` with `%d` and `%f`
-- Implicit and explicit type conversion
-- `##` operator
-- Nested `if`/`else`
-- `while` loop containing an `if`
-- `--` decrement as a statement
-- Function call result passed to printf
+Exercises all basic and extended features together: multiple user-defined functions, `scanf`/`printf`, implicit and explicit type conversion, `##` operator, nested `if`/`else`, `while` loop, compound operators.
 
 **Run:** `make run TEST=test`
 
 ---
 
-### test_types.c — Type system and custom operator
+### `test_types.c` — Extended type features
 
-Focuses on type features:
-- Implicit `int` → `float` conversion via assignment
-- Truncation when assigning `float` → `int`
-- Explicit `(float)` cast
-- Float arithmetic across function calls
-- `##` operator with float operands
-- `while` loop with compound decrement (`exp -= 1`)
+Hex literals, char literals, `NULL`/`true`/`false`, `double` arithmetic, `sizeof`, ternary operator, bitwise compound assignments (`&=`, `|=`, `^=`, `<<=`, `>>=`), `goto`, global variables.
 
 **Run:** `make run TEST=test_types`
 
 ---
 
-### test_control.c — Control flow and recursion
+### `test_control.c` — Control flow and operators
 
-Exercises control flow and multiple functions:
-- `fibonacci(n)` — iterative, uses `while` + `++`
-- `isPrime(n)` — uses nested `while` + `if`, `%` operator
-- `main` calls both in separate `while` loops
-- Demonstrates nested while and while+if combinations
+`for` loop, `for` with `continue`, `do`-`while`, `&&` and `||`, logical `!`, bitwise operators (`&`, `|`, `^`, `<<`, `>>`), bitwise NOT `~`.
 
 **Run:** `make run TEST=test_control`
 
 ---
 
+### `test_switch.c` — Switch statement
+
+Basic integer `switch`, `switch` on enum value, `case` fall-through via absent `break`, `break` inside `while` loop, switch with no `default`.
+
+**Run:** `make run TEST=test_switch`
+
+---
+
+### `test_new.c` — Arrays and structs
+
+`enum` with explicit and implicit values, 1-D array, 2-D array, `struct` with `int` fields, `struct` with `float` fields, function taking an array, member reads/writes.
+
+**Run:** `make run TEST=test_new`
+
+---
+
+### `test_extra.c` — Typedefs, global arrays, compound ops
+
+`typedef` for `int` and `float`, `enum` with hex initialisers, adjacent string literal concatenation, global array read/write, compound assignment on array elements and struct fields, `double` constant folding.
+
+**Run:** `make run TEST=test_extra`
+
+---
+
+### `test_str.c` — Char arrays and strings
+
+`char` array declaration, string-literal assignment via `strcpy`, `scanf %s` into a char array, `printf %s`.
+
+**Run:** `make run TEST=test_str`
+
+---
+
+### `testAll.c` — Full-feature integration test
+
+Combines `#include` directives (skipped), `#define` macros (skipped), complex `struct`/`union`/`typedef`/`enum` declarations, function prototypes for mutual recursion, global variables, pointer arithmetic, designated initialisers, anonymous union/struct, bit-fields, `for` with inner declarations, `do`-`while`, `switch` fall-through, `goto`, function pointer array, `malloc`/`strcpy`/`free`, and mutually recursive functions `isEven`/`isOdd`.
+
+**Run:** `make run TEST=testAll`
+
+---
+
 ## Runtime Library (`myRuntime.c`)
 
-Implements the `##` operator:
+Implements the `##` operator and exposes standard stream symbols:
 
 ```c
 float __hashOp(float a, float b) {
     return powf(a, b) + powf(b, a);
 }
+
+FILE** _get_stdout_ptr(void) { return &stdout; }
+FILE** _get_stderr_ptr(void) { return &stderr; }
+FILE** _get_stdin_ptr (void) { return &stdin;  }
 ```
 
-This function is declared in the generated IR as `declare float @__hashOp(float, float)` and linked at the `clang` step.
+`__hashOp` is declared in the generated IR as `declare float @__hashOp(float, float)` and linked at the `clang` step.
 
 ---
 
 ## File Structure
 
 ```
-myCompiler.g4          — ANTLR4 grammar (lexer + parser + code generator)
-myCompiler_test.java   — Driver: reads .c file, runs parser, prints LLVM IR
-myRuntime.c            — Runtime library (implements ## operator)
-Makefile               — Build and run targets
-test.c / test.ll       — Stress test + generated IR
-test_types.c / .ll     — Type system test + generated IR
-test_control.c / .ll   — Control flow test + generated IR
-antlr-4.13.2-complete.jar
+myCompiler.g4              — ANTLR4 grammar (lexer + parser + code generator)
+myCompiler_test.java       — Driver: reads .c file, runs parser, prints LLVM IR
+myRuntime.c                — Runtime library (__hashOp + stream pointer helpers)
+Makefile                   — Build and run targets
+antlr-4.13.2-complete.jar  — ANTLR4 runtime (required)
+
+test.c / test.ll           — Comprehensive stress test
+test_types.c / test_types.ll   — Extended type features
+test_control.c / test_control.ll — Control flow and operators
+test_switch.c / test_switch.ll  — Switch/case with enum values and fall-through
+test_new.c / test_new.ll       — Arrays, multi-dim arrays, structs
+test_extra.c / test_extra.ll   — Typedefs, global arrays, compound ops
+test_str.c / test_str.ll       — Char arrays and string operations
+testAll.c / testAll.ll         — Full-feature integration test
 ```
