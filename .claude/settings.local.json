@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make run *)",
+      "Bash(make build *)",
+      "Bash(nm /usr/lib/libc.dylib)",
+      "Bash(nm /usr/lib/libSystem.dylib)",
+      "Bash(clang -S -emit-llvm /tmp/t.c -o /tmp/t.ll)",
+      "Read(//private/tmp/**)"
+    ]
+  }
+}
